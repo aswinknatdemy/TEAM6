@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentTheme = localStorage.getItem('theme');
     if (currentTheme) {
         document.documentElement.setAttribute('data-theme', currentTheme);
-        if (currentTheme === 'light') {
+        if (currentTheme === 'light' && themeToggle) {
             themeToggle.checked = true;
         }
     }
@@ -27,7 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }    
     }
 
-    themeToggle.addEventListener('change', switchTheme, false);
+    if (themeToggle) {
+        themeToggle.addEventListener('change', switchTheme, false);
+    }
 
     let currentData = [];
     let isInitialLoad = true;
@@ -57,7 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
             updateGlobalStats(currentData);
             
             const now = new Date();
-            lastUpdatedEl.textContent = now.toLocaleTimeString();
+            if (lastUpdatedEl) {
+                lastUpdatedEl.textContent = now.toLocaleTimeString();
+            }
         } catch (error) {
             console.error('Error:', error);
             if (isInitialLoad) {
@@ -149,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function animateValue(el, value) {
+        if (!el) return;
         let currentText = el.textContent.replace(/,/g, '');
         let current = parseInt(currentText) || 0;
         if (current === value) return; // No change
@@ -166,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderDashboard(data) {
-        const searchTerm = searchInput.value.toLowerCase();
+        const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
         const filteredData = data.filter(m => 
             m.name.toLowerCase().includes(searchTerm) || 
             m.id.toLowerCase().includes(searchTerm)
@@ -247,13 +252,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Search filter
-    searchInput.addEventListener('input', () => {
-        renderDashboard(currentData);
-    });
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            renderDashboard(currentData);
+        });
+    }
 
     // Initial load
     fetchStats();
     
     // Auto refresh every 5 seconds without showing loading spinner
-    setInterval(fetchStats, 5000);
+    setInterval(fetchStats, 10000);
 });

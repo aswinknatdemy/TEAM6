@@ -15,25 +15,65 @@ NAMES = {
     'FTM105': 'ANSHID'
 }
 
+PASSWORDS = {
+    'FTM118': 'Aswink@113',
+    'FTM117': 'sinan@tm6',
+    'FTM020': 'Pass@Sabitha',
+    'FTM138': 'shameel@team6',
+    'FTM134': 'nivedhya@tem6',
+    'FTM018': 'ashiq@ttm6',
+    'FTM014': 'shaniya@tmm6',
+    'FTM105': 'anshi@tm6'
+}
+
 def get_stats(emp_id):
-    url = f"https://plusthree.natdemy.com/users/dashboard/?referral={emp_id}"
+    login_url = "https://plusthree.natdemy.com/users/login/"
+    password = PASSWORDS.get(emp_id)
+    if not password:
+        return {
+            "id": emp_id,
+            "name": NAMES.get(emp_id, emp_id),
+            "total": 0, "verified": 0, "rejected": 0, "waiting": 0, "error": True
+        }
+    
     try:
-        response = requests.get(url, timeout=10)
+        session = requests.Session()
+        # Get login page to get CSRF token
+        response = session.get(login_url, timeout=10)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
+            csrf_input = soup.find('input', {'name': 'csrfmiddlewaretoken'})
+            if not csrf_input:
+                raise ValueError("CSRF token not found")
+            csrf_token = csrf_input['value']
+            
+            # Login
+            login_data = {
+                'csrfmiddlewaretoken': csrf_token,
+                'employee_id': emp_id,
+                'password': password
+            }
+            headers = {
+                'Referer': login_url
+            }
+            
+            post_response = session.post(login_url, data=login_data, headers=headers, timeout=10)
+            
+            # If successful, we should be on the dashboard page
+            dash_soup = BeautifulSoup(post_response.text, 'html.parser')
             
             def find_value(label_text):
-                label_div = soup.find('div', string=label_text)
-                if label_div:
-                    value_div = label_div.find_next_sibling('div', class_='value')
-                    if value_div:
-                        return int(value_div.text.strip())
+                label_p = dash_soup.find('p', string=label_text)
+                if label_p:
+                    value_p = label_p.find_next_sibling('p', class_='stat-value')
+                    if value_p:
+                        return int(value_p.text.strip())
                 return 0
 
-            total = find_value("All Registered Members")
-            verified = find_value("Verified Members")
-            rejected = find_value("Rejected Members")
-            waiting = total - verified - rejected
+            total = find_value("Total Registrations")
+            verified = find_value("Verified")
+            rejected = find_value("Rejected")
+            waiting = find_value("Waiting")
             
             return {
                 "id": emp_id,
