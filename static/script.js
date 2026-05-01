@@ -46,13 +46,22 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchStats() {
         try {
             const response = await fetch('/api/stats');
-            const newData = await response.json();
+            const incomingData = await response.json();
             
+            // 0 COUNT PROTECTION: If a member has an error, keep their old data
+            const newData = incomingData.map(newMember => {
+                const oldMember = currentData.find(m => m.id === newMember.id);
+                if (newMember.error || (newMember.total === 0 && oldMember && oldMember.total > 0)) {
+                    return oldMember; // Stay with the old good data
+                }
+                return newMember;
+            });
+
             if (isInitialLoad) {
                 const loader = document.getElementById('initialLoader');
                 if (loader) loader.remove();
                 isInitialLoad = false;
-                renderDashboard(newData); // Initial full render
+                renderDashboard(newData);
             } else {
                 updateDashboardSeamlessly(newData);
             }
@@ -65,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 lastUpdatedEl.textContent = now.toLocaleTimeString();
             }
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Error fetching data:', error);
         }
     }
 
@@ -217,7 +226,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial load
     fetchStats();
     
-    // Auto refresh every 10 seconds
-    setInterval(fetchStats, 10000);
+    // Auto refresh every 5 seconds
+    setInterval(fetchStats, 5000);
+
 });
 
