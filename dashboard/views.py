@@ -110,11 +110,12 @@ from concurrent.futures import ThreadPoolExecutor
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def api_stats(request):
-    # Fetch all stats in parallel to save time (crucial for mobile)
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    # Fetch all stats in parallel (reduced to 4 workers to prevent rate-limiting)
+    with ThreadPoolExecutor(max_workers=4) as executor:
         results = list(executor.map(get_stats, EMPLOYEE_IDS))
     
-    # Sort by total registrations descending
-    results.sort(key=lambda x: x['total'], reverse=True)
+    # Sort by VERIFIED (matching the frontend logic to prevent jumping)
+    results.sort(key=lambda x: x['verified'], reverse=True)
     return Response(results)
+
 
