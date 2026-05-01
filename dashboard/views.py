@@ -105,14 +105,16 @@ def get_stats(emp_id):
 def index(request):
     return render(request, 'index.html')
 
+from concurrent.futures import ThreadPoolExecutor
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def api_stats(request):
-
-    results = []
-    for emp_id in EMPLOYEE_IDS:
-        results.append(get_stats(emp_id))
+    # Fetch all stats in parallel to save time (crucial for mobile)
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        results = list(executor.map(get_stats, EMPLOYEE_IDS))
     
     # Sort by total registrations descending
     results.sort(key=lambda x: x['total'], reverse=True)
     return Response(results)
+

@@ -407,7 +407,11 @@ body {
     .grid-container { grid-template-columns: 1fr; }
     .stats-overview { grid-template-columns: repeat(2, 1fr); }
     .header-right { display: none; }
+    .header-content h1 { font-size: 1.8rem; }
+    .stat-details p { font-size: 2.5rem; }
+    .party-count { font-size: 6rem; }
 }
+
 
 /* Party Overlay Animation */
 .party-overlay {
