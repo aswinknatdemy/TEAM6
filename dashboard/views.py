@@ -1,5 +1,9 @@
 from django.shortcuts import render
 from django.http import JsonResponse
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+
 import requests
 from bs4 import BeautifulSoup
 
@@ -54,10 +58,12 @@ def get_stats(emp_id):
                 'password': password
             }
             headers = {
-                'Referer': login_url
+                'Referer': login_url,
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
             
             post_response = session.post(login_url, data=login_data, headers=headers, timeout=10)
+
             
             # If successful, we should be on the dashboard page
             dash_soup = BeautifulSoup(post_response.text, 'html.parser')
@@ -99,11 +105,14 @@ def get_stats(emp_id):
 def index(request):
     return render(request, 'index.html')
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def api_stats(request):
+
     results = []
     for emp_id in EMPLOYEE_IDS:
         results.append(get_stats(emp_id))
     
     # Sort by total registrations descending
     results.sort(key=lambda x: x['total'], reverse=True)
-    return JsonResponse(results, safe=False)
+    return Response(results)
