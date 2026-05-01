@@ -71,28 +71,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateGlobalStats(data) {
         const stats = data.reduce((acc, curr) => {
-            acc.total += curr.total;
-            acc.verified += curr.verified;
-            acc.waiting += curr.waiting;
-            acc.rejected += curr.rejected;
+            acc.total += Number(curr.total) || 0;
+            acc.verified += Number(curr.verified) || 0;
+            acc.waiting += Number(curr.waiting) || 0;
+            acc.rejected += Number(curr.rejected) || 0;
             return acc;
         }, { total: 0, verified: 0, waiting: 0, rejected: 0 });
 
-        if (previousVerified !== null) {
-            const prevMult = Math.floor(previousVerified / 50);
-            const currMult = Math.floor(stats.verified / 50);
-            if (currMult > prevMult && stats.verified > 0) {
+        // Only trigger if we have a previous count and the 50-count "bucket" has increased
+        if (previousVerified !== null && stats.verified > previousVerified) {
+            const prevBucket = Math.floor(previousVerified / 50);
+            const currBucket = Math.floor(stats.verified / 50);
+            
+            if (currBucket > prevBucket) {
                 triggerPartyAnimation(stats.verified);
             }
         }
+        
         previousVerified = stats.verified;
 
-        // Instant update instead of animation to prevent "unwanted changing"
         globalTotalEl.textContent = stats.total.toLocaleString();
         globalVerifiedEl.textContent = stats.verified.toLocaleString();
         globalWaitingEl.textContent = stats.waiting.toLocaleString();
         globalRejectedEl.textContent = stats.rejected.toLocaleString();
     }
+
 
     function triggerPartyAnimation(count) {
         let overlay = document.getElementById('partyOverlay');
