@@ -74,7 +74,8 @@ def get_stats(emp_id):
             follow_soup = BeautifulSoup(follow_up_response.text, 'html.parser')
             
             # Find the table and count statuses
-            table = follow_soup.find('table', class_='table')
+            # The table on the follow-up page doesn't have a class, but it's the only one.
+            table = follow_soup.find('table')
             
             total = 0
             verified = 0

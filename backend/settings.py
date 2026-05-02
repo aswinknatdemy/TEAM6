@@ -22,12 +22,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-(jcuyf1ukemcm=*e*hyt%kr_^hlyf*d2xi$omqq1i1o8fr94!c'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-(jcuyf1ukemcm=*e*hyt%kr_^hlyf*d2xi$omqq1i1o8fr94!c')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*'] # In production, replace '*' with your Render URL (e.g., ['team6.onrender.com'])
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+
+# Add Render's hostname to ALLOWED_HOSTS and CSRF_TRUSTED_ORIGINS
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+    CSRF_TRUSTED_ORIGINS = [f"https://{RENDER_EXTERNAL_HOSTNAME}"]
+else:
+    # Fallback for initial setup/testing
+    ALLOWED_HOSTS.append('*')
 
 
 
