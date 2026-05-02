@@ -63,23 +63,39 @@ def get_stats(emp_id):
             }
             
             post_response = session.post(login_url, data=login_data, headers=headers, timeout=10)
-
             
-            # If successful, we should be on the dashboard page
-            dash_soup = BeautifulSoup(post_response.text, 'html.parser')
+            # Navigate to the follow-up page
+            follow_up_url = "https://plusthree.natdemy.com/users/follow-up/"
+            follow_up_response = session.get(follow_up_url, timeout=10)
             
-            def find_value(label_text):
-                label_p = dash_soup.find('p', string=label_text)
-                if label_p:
-                    value_p = label_p.find_next_sibling('p', class_='stat-value')
-                    if value_p:
-                        return int(value_p.text.strip())
-                return 0
-
-            total = find_value("Total Registrations")
-            verified = find_value("Verified")
-            rejected = find_value("Rejected")
-            waiting = find_value("Waiting")
+            if follow_up_response.status_code != 200:
+                raise ValueError(f"Failed to load follow-up page: {follow_up_response.status_code}")
+                
+            follow_soup = BeautifulSoup(follow_up_response.text, 'html.parser')
+            
+            # Find the table and count statuses
+            table = follow_soup.find('table', class_='table')
+            
+            total = 0
+            verified = 0
+            rejected = 0
+            waiting = 0
+            
+            if table:
+                tbody = table.find('tbody')
+                if tbody:
+                    rows = tbody.find_all('tr')
+                    total = len(rows)
+                    for row in rows:
+                        cols = row.find_all('td')
+                        if len(cols) >= 4:
+                            status_text = cols[3].get_text(strip=True).lower()
+                            if 'verified' in status_text:
+                                verified += 1
+                            elif 'rejected' in status_text:
+                                rejected += 1
+                            elif 'waiting' in status_text or 'pending' in status_text:
+                                waiting += 1
             
             return {
                 "id": emp_id,
